@@ -1,0 +1,35 @@
+# dependencies
+/node_modules
+
+# build
+/dist
+
+# 本地环境变量（可含敏感信息）
+*.local
+.env.local
+.env.*.local
+
+# 编辑器
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 日志
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Vitest / 覆盖率
+coverage
+*.lcov
+
+# Auto-import 生成声明，随构建生成
+src/auto-imports.d.ts
+src/components.d.ts
