@@ -1,0 +1,122 @@
+# =========================
+# Java / Maven
+# =========================
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+*.ear
+*.log
+hs_err_pid*
+replay_pid*
+
+# Maven 构建产物
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# =========================
+# Go
+# =========================
+# Go 编译二进制
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+gateway-service/gateway-service
+gateway-service/gateway-service.exe
+*.test
+*.out
+
+# Go 工作区
+go.work
+go.work.sum
+
+# 依赖缓存（一般不需要提交）
+vendor/
+
+# =========================
+# 前端 / Node
+# =========================
+node_modules/
+dist/
+build/
+.vite/
+.next/
+.nuxt/
+.cache/
+*.local
+
+# 前端日志
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 环境变量文件（重要！不要提交敏感信息）
+.env
+.env.local
+.env.*.local
+
+# =========================
+# IDE / 编辑器
+# =========================
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.idea_modules/
+
+# Eclipse
+.settings/
+.project
+.classpath
+.metadata/
+
+# VS Code
+.vscode/
+!.vscode/extensions.json
+
+# =========================
+# 操作系统
+# =========================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+.directory
+
+# =========================
+# 日志与临时文件
+# =========================
+logs/
+*.log
+*.tmp
+*.swp
+*.swo
+*~
+
+# =========================
+# Docker
+# =========================
+# 如果本地有 docker-compose 覆盖文件
+docker-compose.override.yml
