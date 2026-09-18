@@ -38,7 +38,7 @@ formatters:
       simplify: true
     goimports:
       local-prefixes:
-        - github.com/你的用户名/LeadReach-AI/gateway-service
+        - github.com/KK-HH-AI/LeadReach-AI/gateway-service
   exclusions:
     generated: lax
     paths:
