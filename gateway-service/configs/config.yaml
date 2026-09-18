@@ -1,0 +1,23 @@
+# 服务信息
+app:
+  name: gateway-service
+  env: development
+  port: 8080
+
+# 密钥配置
+jwt:
+  secret: "your-secret-key"
+  header: "Authorization"
+  prefix: "Bearer"
+
+# redis配置
+redis:
+  addr: "localhost:6379"
+  password: "12345678"
+  db: 0
+
+# 方便本地服务开发
+services:
+  user-service: "http://localhost:8081"
+  index-service: "http://localhost:8082"
+
