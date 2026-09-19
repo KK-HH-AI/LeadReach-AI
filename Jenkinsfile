@@ -30,6 +30,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh '''
+                    docker start nginx || true
                     docker cp frontend/dist/. nginx:/usr/share/nginx/html/
                     docker exec -u root nginx chmod -R 755 /usr/share/nginx/html
                     docker exec -u root nginx find /usr/share/nginx/html -type f -exec chmod 644 {} \\;
