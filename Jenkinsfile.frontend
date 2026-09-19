@@ -1,29 +1,32 @@
 // 前端流水线（方案 A）：打包 dist → 拷入 nginx 挂载目录 → nginx 容器即时生效
-// 注意：jenkins 容器不含 node，构建走 `docker run node:20-alpine`
 // 部署目标：/var/www/nginx/html 已挂载到宿主机 /home/xike/LeadReach_AI/nginx/html
-// 说明：本 Job 只服务于 frontend（SCM 已锁定 main + Script Path），不再用 changeset 过滤，
-//       避免首次构建因无基线导致全部 stage 被跳过。
+// 说明：本 Job 只服务于 frontend，不做 changeset 过滤
 pipeline {
     agent any
 
     triggers { pollSCM('H 12 * * *') }
 
+    environment {
+        // Jenkins 容器内 workspace 对应宿主机路径（jenkins/home bind mount）
+        HOST_WS = "/home/xike/LeadReach_AI/jenkins/home/workspace/${JOB_NAME}"
+    }
+
     stages {
-        // 构建：用 node 容器执行 pnpm build，产物在 frontend/dist/
+        // 构建：用 node 容器执行 pnpm build
+        // 注意：挂载的是【宿主机路径】，因为 jenkins 调用的 docker 是宿主机 docker
         stage('构建 dist') {
             steps {
-                // 挂 Jenkins 的 workspace 到 /app，构建产物留宿主机 workspace
                 sh '''
                     docker run --rm \
-                        -v "${WORKSPACE}/frontend":/app \
+                        -v "${HOST_WS}/frontend":/app \
                         -w /app \
                         node:20-alpine \
-                        sh -c "corepack enable && pnpm install --frozen-lockfile && pnpm build"
+                        sh -c "corepack enable && corepack prepare pnpm@10.18.1 --activate && pnpm install --frozen-lockfile && pnpm build"
                 '''
             }
         }
 
-        // 部署：把 dist 拷到 nginx 挂载目录（nginx 容器自动读到新文件）
+        // 部署：把 dist 拷到 nginx 挂载目录（Jenkins 容器内 /var/www/nginx/html = 宿主机 nginx/html）
         stage('部署到 nginx') {
             steps {
                 sh '''
