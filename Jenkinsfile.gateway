@@ -1,0 +1,36 @@
+// 网关流水线：只负责 gateway-service/ 目录，构建 Go 镜像并部署
+// 触发：每天 12 点那一小时内轮询 GitHub；H 让 Jenkins 自动错开各 Job 的分钟，避免整点挤一起
+pipeline {
+    agent any
+
+    triggers { pollSCM('H 12 * * *') }
+
+    stages {
+        // 变更检测：本次提交没动 gateway-service/ 就直接结束
+        stage('变更检测') {
+            when { changeset 'gateway-service/**' }
+            steps { echo '网关代码有变更，开始构建' }
+        }
+
+        // 构建镜像：Go 编译 + 拷贝 configs 目录，全在 Dockerfile 内完成
+        stage('构建镜像') {
+            when { changeset 'gateway-service/**' }
+            steps {
+                dir('gateway-service') {
+                    sh 'docker build -t leadreach/gateway:latest .'
+                }
+            }
+        }
+
+        // 部署：用刚构建的镜像重建网关容器
+        stage('部署') {
+            when { changeset 'gateway-service/**' }
+            steps {
+                sh '''
+                    cd /opt/leadreach/deploy
+                    docker compose up -d --no-deps --no-build gateway
+                '''
+            }
+        }
+    }
+}

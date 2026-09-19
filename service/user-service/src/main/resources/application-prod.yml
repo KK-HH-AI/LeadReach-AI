@@ -1,0 +1,17 @@
+# 生产环境（Docker 容器部署，--spring.profiles.active=prod 或 SPRING_PROFILES_ACTIVE=prod）
+# 容器内 localhost 是容器自己，访问宿主机服务必须用宿主机 IP
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 172.21.160.247:8848
+  data:
+    redis:
+      host: 172.21.160.247
+      port: 6379
+      password: 12345678
+  datasource:
+    url: jdbc:mysql://172.21.160.247:3306/leadreach?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: "123456"
+    driver-class-name: com.mysql.cj.jdbc.Driver

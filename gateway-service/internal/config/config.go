@@ -12,6 +12,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/viper"
 )
@@ -56,15 +57,26 @@ type Config struct {
 }
 
 // Load 读取 configs/ 下的配置文件，组装成 Config 返回
+//
+// 【多环境解耦】
+// 通过环境变量 APP_ENV 选择配置文件，不写死一份：
+//   - APP_ENV=production → configs/config.prod.yaml（服务器/容器用，服务名解析）
+//   - 其他值或不设置   → configs/config.yaml（本地开发用，localhost 直连）
 func Load() (*Config, error) {
 	cfg := &Config{}
+
+	// ─── 第 0 步：按环境挑选主配置文件 ───
+	mainFile := "configs/config.yaml"
+	if env := os.Getenv("APP_ENV"); env == "production" {
+		mainFile = "configs/config.prod.yaml"
+	}
 
 	// ─── 第 1 步：读主配置 config.yaml ───
 	// viper 是通用配置库，支持 yaml/json/env，这里只用到 yaml
 	mainViper := viper.New()
-	mainViper.SetConfigFile("configs/config.yaml")
+	mainViper.SetConfigFile(mainFile)
 	if err := mainViper.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("读取 config.yaml 失败: %w", err)
+		return nil, fmt.Errorf("读取 %s 失败: %w", mainFile, err)
 	}
 	// Unmarshal：把 yaml 内容按字段名（tag）倒进 cfg 结构体
 	if err := mainViper.Unmarshal(cfg); err != nil {

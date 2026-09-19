@@ -1,23 +1,15 @@
+# 公共配置（所有环境共用）：服务名、Web、MyBatis 等
 server:
   port: 8081
 
 spring:
   application:
     name: user-service
-  cloud:
-    nacos:
-      discovery:
-        server-addr: 172.21.160.247:8848
-  data:
-    redis:
-      host: 172.21.160.247
-      port: 6379
-      password: 12345678
-  datasource:
-    url: jdbc:mysql://172.21.160.247:3306/leadreach?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: root
-    password: 123456
-    driver-class-name: com.mysql.cj.jdbc.Driver
+  # 默认本地环境；服务器上通过环境变量 SPRING_PROFILES_ACTIVE=prod 覆盖
+  profiles:
+    active: local
+
+# Nacos / Redis / MySQL 按环境区分，见 application-local.yml / application-prod.yml
 
 mybatis-plus:
   configuration:

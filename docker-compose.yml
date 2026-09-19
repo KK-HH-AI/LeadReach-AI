@@ -1,0 +1,39 @@
+# LeadReach AI 三服务编排（服务器 172.21.160.247 部署用）
+# 前置：Redis/MySQL/Nacos 已运行在宿主机（172.21.160.247）
+version: "3.9"
+
+services:
+  # ── 前端：静态文件 + /api 反代到网关 ──
+  frontend:
+    image: leadreach/frontend:latest
+    build: ./frontend
+    container_name: leadreach-frontend
+    ports:
+      - "80:80"          # 对外唯一入口
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
+  # ── 网关：Go 服务（APP_ENV=production 加载 config.prod.yaml）──
+  gateway:
+    image: leadreach/gateway:latest
+    build: ./gateway-service
+    container_name: leadreach-gateway
+    environment:
+      - APP_ENV=production
+    ports:
+      - "8080:8080"
+    depends_on:
+      - user-service
+    restart: unless-stopped
+
+  # ── 后端：Java 服务（SPRING_PROFILES_ACTIVE=prod 加载 application-prod.yml）──
+  user-service:
+    image: leadreach/user-service:latest
+    build: ./service
+    container_name: leadreach-user-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    ports:
+      - "8081:8081"
+    restart: unless-stopped

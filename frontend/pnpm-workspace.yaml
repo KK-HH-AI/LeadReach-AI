@@ -2,5 +2,3 @@ onlyBuiltDependencies:
   - esbuild
   - '@parcel/watcher'
   - vue-demi
-
-dangerouslyAllowAllBuilds: true

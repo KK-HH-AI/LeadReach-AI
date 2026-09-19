@@ -1,0 +1,23 @@
+# 服务信息（生产环境，由 APP_ENV=production 加载）
+# 容器内 localhost 是容器自己，访问宿主机服务必须用宿主机 IP
+app:
+  name: gateway-service
+  env: production
+  port: 8080
+
+# 密钥配置（必须与 user-service 签发时一致）
+jwt:
+  secret: "your-secret-key"
+  header: "Authorization"
+  prefix: "Bearer"
+
+# redis配置（网关暂未使用，保留）
+redis:
+  addr: "172.21.160.247:6379"
+  password: "12345678"
+  db: 0
+
+# 服务发现表：容器编排下通过 Docker 网络用服务名解析
+services:
+  user-service: "http://user-service:8081"
+  index-service: "http://index-service:8082"

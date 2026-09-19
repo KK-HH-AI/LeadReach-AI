@@ -19,6 +19,7 @@ FROM gcr.io/distroless/static-debian12
 WORKDIR /app
 
 COPY --from=builder /app/bin/gateway-service /app/gateway-service
+COPY --from=builder /app/configs /app/configs
 
 EXPOSE 8080
 

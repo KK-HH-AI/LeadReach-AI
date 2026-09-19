@@ -1,0 +1,36 @@
+// 前端流水线：只负责 frontend/ 目录，构建 nginx 镜像并部署
+// 触发：每天 12 点那一小时内轮询 GitHub；H 让 Jenkins 自动错开各 Job 的分钟，避免整点挤一起
+pipeline {
+    agent any
+
+    triggers { pollSCM('H 12 * * *') }
+
+    stages {
+        // 变更检测：本次提交没动 frontend/ 就直接结束，不构建不部署
+        stage('变更检测') {
+            when { changeset 'frontend/**' }
+            steps { echo '前端代码有变更，开始构建' }
+        }
+
+        // 构建镜像：pnpm install + pnpm build + 打进 nginx 镜像，全在 Dockerfile 内完成
+        stage('构建镜像') {
+            when { changeset 'frontend/**' }
+            steps {
+                dir('frontend') {
+                    sh 'docker build -t leadreach/frontend:latest .'
+                }
+            }
+        }
+
+        // 部署：用刚构建的镜像重建前端容器（--no-build 避免 compose 重复构建）
+        stage('部署') {
+            when { changeset 'frontend/**' }
+            steps {
+                sh '''
+                    cd /opt/leadreach/deploy
+                    docker compose up -d --no-deps --no-build frontend
+                '''
+            }
+        }
+    }
+}
