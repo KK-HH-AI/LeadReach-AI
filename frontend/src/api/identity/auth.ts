@@ -2,14 +2,14 @@ import { http } from '../request'
 import type { LoginResult, AuthMeResult, UserProfile } from './types'
 
 export interface LoginPayload {
-  /** 超管可留空 */
-  tenantCode?: string
-  username: string
-  password: string
-  remember?: boolean
+  phone: string
+  code: string
 }
 
 export const authApi = {
+  /** 发送短信验证码（后端 AuthController.sendCode） */
+  sendCode: (phone: string) => http.post<null>('/auth/send-code', { phone }),
+  /** 手机号+验证码登录（后端 AuthController.login） */
   login: (payload: LoginPayload) => http.post<LoginResult>('/auth/login', payload),
   logout: () => http.post<void>('/auth/logout'),
   refresh: (refreshToken: string) => http.post<LoginResult>('/auth/refresh', { refreshToken }),

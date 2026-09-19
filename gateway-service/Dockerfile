@@ -14,7 +14,8 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
     ./cmd/main.go
 
 # ── Runtime Stage ─────────────────────────────────────────────
-FROM gcr.io/distroless/static-debian12
+# 用 alpine 而非 gcr.io/distroless：国内服务器拉取 gcr 不通，alpine 走 docker 加速器可拉
+FROM alpine:3.20
 
 WORKDIR /app
 

@@ -1,11 +1,12 @@
 import type { PageQuery } from '../types'
 
-/** 登录返回 */
+/** 登录返回（后端 AuthController.login 实际结构：token + phone） */
 export interface LoginResult {
   token: string
-  refreshToken: string
-  tenantId: string
-  expiresIn: number
+  refreshToken?: string
+  tenantId?: string
+  expiresIn?: number
+  phone?: string
 }
 
 /** 当前用户 / 认证信息 */

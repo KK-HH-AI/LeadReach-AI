@@ -36,28 +36,51 @@ export const useUserStore = defineStore('user', {
       localStorage.setItem(TOKEN_KEY, token)
       localStorage.setItem(REFRESH_KEY, refreshToken)
     },
-    /** 登录：登录成功后拉取用户信息 + 租户 + 菜单 */
+    /** 登录：后端仅返回 token+phone，无 me/menus 接口，本地合成档案确保进入系统 */
     async login(payload: LoginPayload) {
       const res = await authApi.login(payload)
-      this.setToken(res.token, res.refreshToken)
-      const tenantStore = useTenantStore()
-      tenantStore.setCurrentTenant(res.tenantId)
-      await this.fetchProfile()
+      // setToken 第二参可选（后端无 refreshToken）
+      this.setToken(res.token, res.refreshToken || '')
+      // 本地合成用户档案：phone 即登录凭证
+      this.profile = {
+        id: res.phone || payload.phone,
+        username: res.phone || payload.phone,
+        name: res.phone || payload.phone,
+        email: '',
+        mobile: res.phone || payload.phone,
+        tenantId: '',
+        isAdmin: true,
+        roles: [],
+        permissions: []
+      }
+      this.permissions = []
+      this.menus = []
+      // 后端暂无租户概念，清空租户状态
+      useTenantStore().clear()
     },
-    /** 拉取当前用户信息与权限 */
+    /** 拉取当前用户信息与权限（后端暂无 me/menus 接口，失败时保留本地档案，不抛出） */
     async fetchProfile() {
       const tenantStore = useTenantStore()
-      const me = await authApi.me()
-      this.profile = me.user
-      this.permissions = me.permissions
-      if (me.user.tenantId) {
-        tenantStore.setCurrentTenant(me.user.tenantId, !!me.user.isAdmin)
+      try {
+        const me = await authApi.me()
+        this.profile = me.user
+        this.permissions = me.permissions
+        if (me.user.tenantId) {
+          tenantStore.setCurrentTenant(me.user.tenantId, !!me.user.isAdmin)
+        }
+        await this.fetchMenus()
+      } catch (e) {
+        console.warn('后端未实现 /auth/me，使用本地档案', e)
       }
-      await this.fetchMenus()
     },
-    /** 拉取动态菜单 */
+    /** 拉取动态菜单（后端暂无，失败静默返回空） */
     async fetchMenus() {
-      this.menus = await authApi.menus()
+      try {
+        this.menus = await authApi.menus()
+      } catch (e) {
+        console.warn('后端未实现 /auth/menus，使用空菜单', e)
+        this.menus = []
+      }
     },
     /** 刷新 token，成功返回 true */
     async tryRefresh(): Promise<boolean> {

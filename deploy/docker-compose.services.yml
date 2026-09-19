@@ -1,0 +1,31 @@
+# LeadReach 网关 + 后端 容器编排（方案 A：不与现有 jenkins/nginx 容器冲突）
+# 端口：网关→8082（8080 被 jenkins 占用），后端→8081
+# 依赖：Redis/MySQL/Nacos 已在宿主机运行（容器用宿主 IP 访问）
+services:
+  gateway:
+    image: leadreach/gateway:latest
+    build: ./gateway-service
+    container_name: leadreach-gateway
+    environment:
+      - APP_ENV=production
+    ports:
+      - "8082:8080"
+    networks:
+      - leadreach-net
+    restart: unless-stopped
+
+  user-service:
+    image: leadreach/user-service:latest
+    build: ./service
+    container_name: leadreach-user-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    ports:
+      - "8081:8081"
+    networks:
+      - leadreach-net
+    restart: unless-stopped
+
+networks:
+  leadreach-net:
+    driver: bridge
