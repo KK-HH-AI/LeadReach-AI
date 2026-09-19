@@ -1,34 +1,41 @@
-// 前端流水线：只负责 frontend/ 目录，构建 nginx 镜像并部署
-// 触发：每天 12 点那一小时内轮询 GitHub；H 让 Jenkins 自动错开各 Job 的分钟，避免整点挤一起
+// 前端流水线（方案 A）：打包 dist → 拷入 nginx 挂载目录 → nginx 容器即时生效
+// 注意：jenkins 容器不含 node，构建走 `docker run node:20-alpine`
+// 部署目标：/var/www/nginx/html 已挂载到宿主机 /home/xike/LeadReach_AI/nginx/html
 pipeline {
     agent any
 
     triggers { pollSCM('H 12 * * *') }
 
     stages {
-        // 变更检测：本次提交没动 frontend/ 就直接结束，不构建不部署
+        // 变更检测：本次提交没动 frontend/ 就直接结束
         stage('变更检测') {
             when { changeset 'frontend/**' }
             steps { echo '前端代码有变更，开始构建' }
         }
 
-        // 构建镜像：pnpm install + pnpm build + 打进 nginx 镜像，全在 Dockerfile 内完成
-        stage('构建镜像') {
+        // 构建：用 node 容器执行 pnpm build，产物在 frontend/dist/
+        stage('构建 dist') {
             when { changeset 'frontend/**' }
             steps {
-                dir('frontend') {
-                    sh 'docker build -t leadreach/frontend:latest .'
-                }
+                // 挂 Jenkins 的 workspace 到 /app，构建产物留宿主机 workspace
+                sh '''
+                    docker run --rm \
+                        -v "${WORKSPACE}/frontend":/app \
+                        -w /app \
+                        node:20-alpine \
+                        sh -c "corepack enable && pnpm install --frozen-lockfile && pnpm build"
+                '''
             }
         }
 
-        // 部署：用刚构建的镜像重建前端容器（--no-build 避免 compose 重复构建）
-        stage('部署') {
+        // 部署：把 dist 拷到 nginx 挂载目录（nginx 容器自动读到新文件）
+        stage('部署到 nginx') {
             when { changeset 'frontend/**' }
             steps {
                 sh '''
-                    cd /opt/leadreach/deploy
-                    docker compose up -d --no-deps --no-build frontend
+                    mkdir -p /var/www/nginx/html
+                    cp -rf "${WORKSPACE}/frontend/dist/." /var/www/nginx/html/
+                    echo "前端已部署到 /var/www/nginx/html"
                 '''
             }
         }

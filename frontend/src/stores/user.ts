@@ -87,7 +87,7 @@ export const useUserStore = defineStore('user', {
       if (!this.refreshToken) return false
       try {
         const res = await authApi.refresh(this.refreshToken)
-        this.setToken(res.token, res.refreshToken)
+        this.setToken(res.token, res.refreshToken || '')
         return true
       } catch {
         return false

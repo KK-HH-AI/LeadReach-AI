@@ -3,6 +3,10 @@ FROM golang:1.25.0-alpine AS builder
 
 WORKDIR /app
 
+# 允许通过 --build-arg GOPROXY=xxx 指定 Go 代理（国内构建默认走 goproxy.cn）
+ARG GOPROXY=https://goproxy.cn,direct
+ENV GOPROXY=$GOPROXY
+
 COPY go.mod go.sum ./
 RUN go mod download
 
