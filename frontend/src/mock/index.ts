@@ -120,29 +120,38 @@ function fail<T = null>(message: string, code = 500): [number, ApiResponse<T>] {
   return [code, { code: -1, message, data: null as T, traceId: genTraceId() }]
 }
 
+/** 模拟短信验证码存储：手机号 → 验证码 */
+const smsCodes: Record<string, string> = {}
+
 export function setupMock() {
   const mock = new MockAdapter(axiosInstance, { delayResponse: 200 })
 
   // ---------- 认证 ----------
-  mock.onPost('/api/auth/login').reply((config) => {
+  // 模拟发送验证码：验证码固定 123456，存入内存
+  mock.onPost('/api/v1/auth/send-code').reply((config) => {
     const body = JSON.parse(config.data || '{}')
-    const user = users.find(
-      (u) =>
-        u.username === body.username &&
-        u.password === body.password &&
-        (!body.tenantCode || u.tenantId?.includes(body.tenantCode))
-    )
-    if (!user) return fail('账号或密码错误', 401)
+    if (!body.phone) return fail('手机号不能为空', 400)
+    smsCodes[body.phone] = '123456'
+    return ok(null)
+  })
+
+  mock.onPost('/api/v1/auth/login').reply((config) => {
+    const body = JSON.parse(config.data || '{}')
+    const expected = smsCodes[body.phone]
+    if (!expected || expected !== body.code) return fail('验证码错误或已过期', 401)
+    const user = users.find((u) => u.username === body.phone) || users[0]
+    delete smsCodes[body.phone]
     return ok({
       token: `mock-token-${user.id}`,
       refreshToken: `mock-refresh-${user.id}`,
       tenantId: user.tenantId ?? '',
-      expiresIn: 7200
+      expiresIn: 7200,
+      phone: body.phone
     })
   })
 
-  mock.onPost('/api/auth/logout').reply(() => ok(null))
-  mock.onPost('/api/auth/refresh').reply(() =>
+  mock.onPost('/api/v1/auth/logout').reply(() => ok(null))
+  mock.onPost('/api/v1/auth/refresh').reply(() =>
     ok({
       token: 'mock-token-refreshed',
       refreshToken: 'mock-refresh-new',
@@ -151,7 +160,7 @@ export function setupMock() {
     })
   )
 
-  mock.onGet('/api/auth/me').reply((config) => {
+  mock.onGet('/api/v1/auth/me').reply((config) => {
     const auth = config.headers?.Authorization as string | undefined
     const uid = auth?.split('-').pop()?.replace('Bearer mock-token-', '') ?? ''
     const user = users.find((u) => u.id.includes(uid)) || users[0]
@@ -171,7 +180,7 @@ export function setupMock() {
     return ok({ user: profile, permissions: profile.permissions })
   })
 
-  mock.onGet('/api/auth/menus').reply(() => ok(buildMenus()))
+  mock.onGet('/api/v1/auth/menus').reply(() => ok(buildMenus()))
 
   // ---------- 租户 ----------
   mock.onGet('/api/tenants').reply((config) => {
