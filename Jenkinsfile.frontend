@@ -1,21 +1,16 @@
 // 前端流水线（方案 A）：打包 dist → 拷入 nginx 挂载目录 → nginx 容器即时生效
 // 注意：jenkins 容器不含 node，构建走 `docker run node:20-alpine`
 // 部署目标：/var/www/nginx/html 已挂载到宿主机 /home/xike/LeadReach_AI/nginx/html
+// 说明：本 Job 只服务于 frontend（SCM 已锁定 main + Script Path），不再用 changeset 过滤，
+//       避免首次构建因无基线导致全部 stage 被跳过。
 pipeline {
     agent any
 
     triggers { pollSCM('H 12 * * *') }
 
     stages {
-        // 变更检测：本次提交没动 frontend/ 就直接结束
-        stage('变更检测') {
-            when { changeset 'frontend/**' }
-            steps { echo '前端代码有变更，开始构建' }
-        }
-
         // 构建：用 node 容器执行 pnpm build，产物在 frontend/dist/
         stage('构建 dist') {
-            when { changeset 'frontend/**' }
             steps {
                 // 挂 Jenkins 的 workspace 到 /app，构建产物留宿主机 workspace
                 sh '''
@@ -30,7 +25,6 @@ pipeline {
 
         // 部署：把 dist 拷到 nginx 挂载目录（nginx 容器自动读到新文件）
         stage('部署到 nginx') {
-            when { changeset 'frontend/**' }
             steps {
                 sh '''
                     mkdir -p /var/www/nginx/html
