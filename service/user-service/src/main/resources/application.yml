@@ -8,6 +8,12 @@ spring:
   # 默认本地环境；服务器上通过环境变量 SPRING_PROFILES_ACTIVE=prod 覆盖
   profiles:
     active: local
+  flyway:
+    # 数据库 leadreach 已存在存量表（Nacos 等），但无迁移历史表。
+    # 必须开启 baseline，把存量库标记为 V0 基线，V1 才会正常执行建表。
+    baseline-on-migrate: true
+    # 默认 baseline 版本是 1，会和 V1 冲突导致 V1 被跳过，所以改为 0
+    baseline-version: 0
 
 # Nacos / Redis / MySQL 按环境区分，见 application-local.yml / application-prod.yml
 

@@ -1,9 +1,12 @@
 import type { PageQuery } from '../types'
 
-/** 登录返回（后端 AuthController.login 实际结构：token + phone） */
+/** 登录返回（后端 AuthController.login 实际结构：token + phone + role + tenantId） */
 export interface LoginResult {
   token: string
   refreshToken?: string
+  /** 身份角色：BOSS(老板) / EMPLOYEE(员工) */
+  role?: string
+  /** 所属公司ID，空 = 尚未加入公司 */
   tenantId?: string
   expiresIn?: number
   phone?: string
@@ -19,6 +22,8 @@ export interface UserProfile {
   avatar?: string
   tenantId: string
   tenantName?: string
+  /** 身份角色：BOSS / EMPLOYEE */
+  role?: string
   isAdmin?: boolean
   roles: string[]
   permissions: string[]

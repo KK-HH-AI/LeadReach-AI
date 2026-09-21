@@ -13,6 +13,12 @@ export const staticRoutes: RouteRecordRaw[] = [
     meta: { title: '登录', hidden: true, ignoreAuth: true }
   },
   {
+    path: '/register',
+    name: 'Register',
+    component: () => import('@/views/register/index.vue'),
+    meta: { title: '注册', hidden: true, ignoreAuth: true }
+  },
+  {
     path: '/',
     name: 'Root',
     component: () => import('@/layouts/DefaultLayout.vue'),
@@ -23,6 +29,18 @@ export const staticRoutes: RouteRecordRaw[] = [
         name: 'Dashboard',
         component: () => import('@/views/dashboard/index.vue'),
         meta: { title: '工作台', icon: 'Odometer', permission: 'dashboard' }
+      },
+      {
+        path: 'team',
+        name: 'Team',
+        component: () => import('@/views/team/index.vue'),
+        meta: { title: '团队管理', icon: 'User', permission: 'team' }
+      },
+      {
+        path: 'company/create',
+        name: 'CompanyCreate',
+        component: () => import('@/views/company/create.vue'),
+        meta: { title: '创建公司', hidden: true }
       },
       {
         path: 'system',
@@ -128,4 +146,4 @@ export const staticRoutes: RouteRecordRaw[] = [
 ]
 
 /** 登录白名单 */
-export const WHITE_LIST = ['/login', '/403', '/404', '/500']
+export const WHITE_LIST = ['/login', '/register', '/403', '/404', '/500']

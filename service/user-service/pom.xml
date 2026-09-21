@@ -50,6 +50,17 @@
             <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
         </dependency>
 
+        <!-- Flyway：数据库版本迁移（脚本放 resources/db/migration/，启动自动执行） -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <!-- Flyway 8.2+ 起 MySQL 支持拆到独立模块，必须显式引入 -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-mysql</artifactId>
+        </dependency>
+
         <!-- Hutool：JWT、随机数等 -->
         <dependency>
             <groupId>cn.hutool</groupId>

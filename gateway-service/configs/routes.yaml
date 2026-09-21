@@ -13,3 +13,17 @@ routes:
     target: user-service
     stripPrefix: false
     middlewares: [cors, requestid, auth]
+
+# 规则3，转发到公司接口（需登录）
+  - id: companies-secure
+    prefix: /api/v1/companies
+    target: user-service
+    stripPrefix: false
+    middlewares: [cors, requestid, auth]
+
+# 规则4，转发到团队接口（需登录）
+  - id: teams-secure
+    prefix: /api/v1/teams
+    target: user-service
+    stripPrefix: false
+    middlewares: [cors, requestid, auth]

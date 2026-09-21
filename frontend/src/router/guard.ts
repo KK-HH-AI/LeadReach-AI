@@ -27,10 +27,11 @@ export function setupRouterGuard(router: Router) {
     }
 
     // 已登录但尚未拉取用户信息（刷新页面场景）
+    // 优先用本地持久化档案恢复；后端无 /auth/me 时拉取失败也保留档案。
+    // 若本地也没有档案（如旧版本残留的 token），视为未登录，回登录页
     if (!userStore.profile) {
-      try {
-        await userStore.fetchProfile()
-      } catch {
+      await userStore.fetchProfile()
+      if (!userStore.profile) {
         userStore.logout()
         return next({ path: '/login', query: { redirect: to.fullPath } })
       }
@@ -39,6 +40,11 @@ export function setupRouterGuard(router: Router) {
     // 已登录访问登录页 → 回首页
     if (to.path === '/login') {
       return next({ path: '/dashboard' })
+    }
+
+    // 老板未创建公司 → 强制引导创建公司（创建公司页本身除外）
+    if (userStore.isBoss && !userStore.hasCompany && to.path !== '/company/create') {
+      return next({ path: '/company/create' })
     }
 
     // 权限检查

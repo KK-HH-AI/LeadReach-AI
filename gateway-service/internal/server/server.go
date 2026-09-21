@@ -63,6 +63,9 @@ func New(cfg *config.Config, logger *slog.Logger) *Server {
 
 	// ─── 第 3 步：gin 引擎 ───
 	engine := gin.New()
+	// 关闭尾部斜杠自动重定向：否则 /api/v1/teams 会被 301 到 /api/v1/teams/，
+	// 而下游 Spring 默认不匹配带尾斜杠的路径，导致 301 → 404 链路
+	engine.RedirectTrailingSlash = false
 	engine.Use(gin.Recovery()) // 兜底：handler 恐慌时返回 500，而不是让进程崩掉
 
 	// /health 健康检查：不经过任何中间件，部署后可用 curl 探活
@@ -83,8 +86,10 @@ func New(cfg *config.Config, logger *slog.Logger) *Server {
 		p := proxy.New(resolver, route.Target, route.Prefix, route.StripPrefix)
 
 		// 4.3 挂到前缀下：/api/v1/auth/* 之后的任何请求都进这条链
-		//     group(prefix, chain...) = 先过中间件链，再命中代理
+		//     同时注册精确前缀路由（无尾斜杠）：gin 的 "/*path" 通配只匹配带斜杠路径，
+		//     不加 "" 这条，POST /api/v1/companies 会被直接 404
 		group := engine.Group(route.Prefix, chain...)
+		group.Any("", p.Handler())
 		group.Any("/*path", p.Handler())
 
 		logger.Info("路由已挂载",

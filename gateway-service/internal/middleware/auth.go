@@ -128,6 +128,14 @@ func JWTAuth(secret, header, prefix string) gin.HandlerFunc {
 			if uid, ok := claims["uid"].(string); ok {
 				c.Request.Header.Set("X-User-Id", uid)
 			}
+			// role / tenantId：user-service 登录时写入，
+			// 下游服务据此判断身份角色和租户（多租户表级隔离）
+			if role, ok := claims["role"].(string); ok {
+				c.Request.Header.Set("X-User-Role", role)
+			}
+			if tenantId, ok := claims["tenantId"].(string); ok {
+				c.Request.Header.Set("X-Tenant-Id", tenantId)
+			}
 		}
 
 		// ---------- 第 5 步：放行 ----------
