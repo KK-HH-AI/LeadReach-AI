@@ -16,6 +16,7 @@ services:
       - "8082:8080"
     depends_on:
       - user-service
+      - crm-service
     networks:
       - leadreach-net
     restart: unless-stopped
@@ -29,6 +30,23 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
     ports:
       - "8081:8081"
+    networks:
+      - leadreach-net
+    restart: unless-stopped
+
+  # ── 线索模块：crm-service（构建上下文是 service/，Dockerfile 在子模块目录）──
+  crm-service:
+    image: leadreach/crm-service:latest
+    build:
+      context: ./service
+      dockerfile: crm-service/Dockerfile
+    container_name: leadreach-crm-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    ports:
+      - "8083:8083"
+    depends_on:
+      - user-service
     networks:
       - leadreach-net
     restart: unless-stopped

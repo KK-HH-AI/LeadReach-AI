@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.leadreach.user.context.TenantContext;
 import com.leadreach.user.entity.BossEmployee;
 import com.leadreach.user.entity.ContentAssignment;
+import com.leadreach.user.entity.Team;
 import com.leadreach.user.entity.User;
 import com.leadreach.user.mapper.BossEmployeeMapper;
 import com.leadreach.user.mapper.ContentAssignmentMapper;
+import com.leadreach.user.mapper.TeamMapper;
 import com.leadreach.user.mapper.UserMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +28,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 团队业务：老板创建团队、拉人、删除人、分配/修改员工负责的内容
- * 团队即 boss_employee 集合，一个老板一个团队，随公司创建而自动可用
+ * 团队业务：老板管理团队、拉人、删除人、分配/修改员工负责的内容
+ *
+ * 团队模型（V3 起）：公司(租户)下可建多个 team，团队由销售主管带队，
+ * boss_employee.team_id 记录员工归属，是线索模块 TEAM 级数据权限的依据。
+ * 公司创建后自动拥有一个「默认团队」，未显式指定团队的成员落在默认团队里。
  */
 @RestController
 @RequestMapping("/api/v1/teams")
@@ -40,11 +45,17 @@ public class TeamController {
             "OPERATOR", "运营"
     );
 
+    /** 默认团队名称 */
+    private static final String DEFAULT_TEAM_NAME = "默认团队";
+
     @Autowired
     private BossEmployeeMapper bossEmployeeMapper;
 
     @Autowired
     private ContentAssignmentMapper contentAssignmentMapper;
+
+    @Autowired
+    private TeamMapper teamMapper;
 
     @Autowired
     private UserMapper userMapper;
@@ -61,8 +72,9 @@ public class TeamController {
 
         long count = bossEmployeeMapper.selectCount(Wrappers.<BossEmployee>lambdaQuery()
                 .eq(BossEmployee::getBossId, bossId));
+        Team defaultTeam = ensureDefaultTeam(bossId, tenantId);
         Map<String, Object> data = new HashMap<>();
-        data.put("teamId", tenantId);
+        data.put("teamId", defaultTeam.getId());
         data.put("bossId", bossId);
         data.put("memberCount", count);
         return Map.of("code", 0, "msg", "团队可用", "data", data);
@@ -85,6 +97,10 @@ public class TeamController {
         if (!empIds.isEmpty()) {
             userMapper.selectBatchIds(empIds).forEach(u -> phoneMap.put(u.getId(), u.getPhone()));
         }
+        // 团队名映射，随成员一起下发，前端可直接展示归属团队
+        Map<Long, String> teamNameMap = new HashMap<>();
+        teamMapper.selectList(Wrappers.<Team>lambdaQuery().eq(Team::getTenantId, TenantContext.getTenantId()))
+                .forEach(t -> teamNameMap.put(t.getId(), t.getName()));
 
         List<Map<String, Object>> data = new ArrayList<>();
         for (BossEmployee m : members) {
@@ -92,13 +108,124 @@ public class TeamController {
             item.put("employeeId", m.getEmployeeId());
             item.put("phone", phoneMap.getOrDefault(m.getEmployeeId(), ""));
             item.put("position", m.getPosition());
+            item.put("teamId", m.getTeamId());
+            item.put("teamName", m.getTeamId() == null ? null : teamNameMap.get(m.getTeamId()));
             item.put("createdAt", m.getCreatedAt());
             data.add(item);
         }
         return Map.of("code", 0, "msg", "ok", "data", data);
     }
 
-    // 拉人入队：员工必须先注册
+    // 团队列表：公司下的所有团队，含负责人与人数
+    @GetMapping("/groups")
+    public Map<String, Object> listGroups(HttpServletRequest request) {
+        Map<String, Object> auth = currentBoss(request);
+        if (auth == null) {
+            return Map.of("code", 1, "msg", "只有已创建公司的老板才能查看团队");
+        }
+        Long tenantId = (Long) auth.get("tenantId");
+
+        List<Team> teams = teamMapper.selectList(Wrappers.<Team>lambdaQuery()
+                .eq(Team::getTenantId, tenantId)
+                .orderByAsc(Team::getId));
+
+        // 负责人手机号 + 各团队人数，一次性查出来避免 N+1
+        List<Long> leaderIds = teams.stream().map(Team::getLeaderUserId).filter(java.util.Objects::nonNull).toList();
+        Map<Long, String> leaderPhoneMap = new HashMap<>();
+        if (!leaderIds.isEmpty()) {
+            userMapper.selectBatchIds(leaderIds).forEach(u -> leaderPhoneMap.put(u.getId(), u.getPhone()));
+        }
+        List<BossEmployee> allMembers = bossEmployeeMapper.selectList(Wrappers.<BossEmployee>lambdaQuery()
+                .eq(BossEmployee::getTenantId, tenantId));
+        Map<Long, Long> memberCountMap = new HashMap<>();
+        for (BossEmployee m : allMembers) {
+            if (m.getTeamId() != null) {
+                memberCountMap.merge(m.getTeamId(), 1L, Long::sum);
+            }
+        }
+
+        List<Map<String, Object>> data = new ArrayList<>();
+        for (Team t : teams) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("teamId", t.getId());
+            item.put("name", t.getName());
+            item.put("leaderUserId", t.getLeaderUserId());
+            item.put("leaderPhone", t.getLeaderUserId() == null ? null : leaderPhoneMap.get(t.getLeaderUserId()));
+            item.put("isDefault", t.getIsDefault());
+            item.put("memberCount", memberCountMap.getOrDefault(t.getId(), 0L));
+            data.add(item);
+        }
+        return Map.of("code", 0, "msg", "ok", "data", data);
+    }
+
+    // 创建团队：指定名称与负责人（负责人必须是本公司销售主管）
+    @PostMapping("/groups")
+    @Transactional
+    public Map<String, Object> createGroup(HttpServletRequest request, @RequestBody Map<String, String> body) {
+        Map<String, Object> auth = currentBoss(request);
+        if (auth == null) {
+            return Map.of("code", 1, "msg", "只有已创建公司的老板才能创建团队");
+        }
+        Long bossId = (Long) auth.get("bossId");
+        Long tenantId = (Long) auth.get("tenantId");
+
+        String name = body.get("name");
+        if (name == null || name.isBlank()) {
+            return Map.of("code", 1, "msg", "团队名称不能为空");
+        }
+        name = name.trim();
+        Long exists = teamMapper.selectCount(Wrappers.<Team>lambdaQuery()
+                .eq(Team::getTenantId, tenantId)
+                .eq(Team::getName, name));
+        if (exists != null && exists > 0) {
+            return Map.of("code", 1, "msg", "同名团队已存在");
+        }
+
+        // 负责人可选：给了手机号就必须是本公司在职的销售主管
+        Long leaderUserId = null;
+        String leaderPhone = body.get("leaderPhone");
+        if (leaderPhone != null && !leaderPhone.isBlank()) {
+            User leader = userMapper.selectOne(Wrappers.<User>lambdaQuery().eq(User::getPhone, leaderPhone.trim()));
+            if (leader == null) {
+                return Map.of("code", 1, "msg", "负责人手机号未注册");
+            }
+            BossEmployee relation = bossEmployeeMapper.selectOne(Wrappers.<BossEmployee>lambdaQuery()
+                    .eq(BossEmployee::getBossId, bossId)
+                    .eq(BossEmployee::getEmployeeId, leader.getId())
+                    .eq(BossEmployee::getStatus, 1));
+            if (relation == null) {
+                return Map.of("code", 1, "msg", "负责人不在本团队中，请先拉人入队");
+            }
+            if (!"SALES_MANAGER".equals(relation.getPosition())) {
+                return Map.of("code", 1, "msg", "团队负责人岗位必须是销售主管");
+            }
+            leaderUserId = leader.getId();
+        }
+
+        Team team = new Team();
+        team.setTenantId(tenantId);
+        team.setName(name);
+        team.setLeaderUserId(leaderUserId);
+        team.setIsDefault(0);
+        team.setStatus(1);
+        teamMapper.insert(team);
+
+        // 负责人自动归入自己带的团队
+        if (leaderUserId != null) {
+            BossEmployee relation = bossEmployeeMapper.selectOne(Wrappers.<BossEmployee>lambdaQuery()
+                    .eq(BossEmployee::getBossId, bossId)
+                    .eq(BossEmployee::getEmployeeId, leaderUserId));
+            relation.setTeamId(team.getId());
+            bossEmployeeMapper.updateById(relation);
+        }
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("teamId", team.getId());
+        data.put("name", team.getName());
+        return Map.of("code", 0, "msg", "创建团队成功", "data", data);
+    }
+
+    // 拉人入队：员工必须先注册；teamId 可省略，缺省落在默认团队
     @PostMapping("/members")
     @Transactional
     public Map<String, Object> addMember(HttpServletRequest request, @RequestBody Map<String, String> body) {
@@ -135,17 +262,29 @@ public class TeamController {
         if (exists != null && exists > 0) {
             return Map.of("code", 1, "msg", "该员工已在团队中");
         }
+        // 5. 指定团队时必须存在且属于本公司；未指定则落入默认团队
+        Team team;
+        String teamIdStr = body.get("teamId");
+        if (teamIdStr != null && !teamIdStr.isBlank()) {
+            team = teamMapper.selectById(Long.parseLong(teamIdStr.trim()));
+            if (team == null || !tenantId.equals(team.getTenantId())) {
+                return Map.of("code", 1, "msg", "指定的团队不存在");
+            }
+        } else {
+            team = ensureDefaultTeam(bossId, tenantId);
+        }
 
-        // 5. 建立团队关系
+        // 6. 建立团队关系
         BossEmployee relation = new BossEmployee();
         relation.setTenantId(tenantId);
         relation.setBossId(bossId);
         relation.setEmployeeId(employee.getId());
         relation.setPosition(position);
+        relation.setTeamId(team.getId());
         relation.setStatus(1);
         bossEmployeeMapper.insert(relation);
 
-        // 6. 回填员工租户（首次入队）
+        // 7. 回填员工租户（首次入队）
         if (employee.getTenantId() == null) {
             employee.setTenantId(tenantId);
             userMapper.updateById(employee);
@@ -227,6 +366,28 @@ public class TeamController {
             contentAssignmentMapper.updateById(assignment);
         }
         return Map.of("code", 0, "msg", "分配成功");
+    }
+
+    /**
+     * 取公司默认团队，不存在则创建（幂等）
+     * 默认团队负责人挂老板本人，保证公司一建立就有一个可用的团队容器
+     */
+    private Team ensureDefaultTeam(Long bossId, Long tenantId) {
+        Team team = teamMapper.selectOne(Wrappers.<Team>lambdaQuery()
+                .eq(Team::getTenantId, tenantId)
+                .eq(Team::getIsDefault, 1)
+                .last("LIMIT 1"));
+        if (team != null) {
+            return team;
+        }
+        team = new Team();
+        team.setTenantId(tenantId);
+        team.setName(DEFAULT_TEAM_NAME);
+        team.setLeaderUserId(bossId);
+        team.setIsDefault(1);
+        team.setStatus(1);
+        teamMapper.insert(team);
+        return team;
     }
 
     /**

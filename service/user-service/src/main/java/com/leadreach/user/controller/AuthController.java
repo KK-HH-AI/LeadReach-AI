@@ -4,7 +4,9 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.digest.BCrypt;
 import cn.hutool.jwt.JWTUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.leadreach.user.entity.BossEmployee;
 import com.leadreach.user.entity.User;
+import com.leadreach.user.mapper.BossEmployeeMapper;
 import com.leadreach.user.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -29,6 +31,9 @@ public class AuthController {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private BossEmployeeMapper bossEmployeeMapper;
 
     /** 短信验证码 Redis key 前缀（发送/校验/删除必须用同一个 key，否则验证码永远删不掉） */
     private static final String SMS_CODE_PREFIX = "sms:code";
@@ -113,8 +118,8 @@ public class AuthController {
             return Map.of("code", 1, "msg", "账号已禁用");
         }
 
-        // 3. 签发 JWT：claims 携带 uid/role/tenantId，网关校验后透传 X-User-* 头给下游
-        //    uid/tenantId 必须转成字符串：网关(golang)断言 claims["uid"] 为 string，数字会失败
+        // 3. 签发 JWT：claims 携带 uid/role/tenantId/position/teamId，网关校验后透传 X-User-* 头给下游
+        //    uid/tenantId/teamId 必须转成字符串：网关(golang)断言 claims 为 string，数字会失败
         Map<String, Object> payload = new HashMap<>();
         payload.put("uid", String.valueOf(user.getId()));
         payload.put("phone", phone);
@@ -122,6 +127,20 @@ public class AuthController {
         if (user.getTenantId() != null) {
             payload.put("tenantId", String.valueOf(user.getTenantId()));
         }
+        // position/teamId：下游 crm-service 据此推导数据权限（BOSS→ALL / SALES_MANAGER→TEAM / SALES_REP→SELF）
+        String position = "BOSS";
+        Long teamId = null;
+        if ("EMPLOYEE".equals(user.getRole())) {
+            BossEmployee relation = bossEmployeeMapper.selectActiveByEmployeeIdWithoutTenant(user.getId());
+            if (relation != null) {
+                position = relation.getPosition();
+                teamId = relation.getTeamId();
+                if (teamId != null) {
+                    payload.put("teamId", String.valueOf(teamId));
+                }
+            }
+        }
+        payload.put("position", position);
         payload.put("exp", System.currentTimeMillis() + 24 * 3600 * 1000);
         String token = JWTUtil.createToken(payload, JWT_SECRET.getBytes());
 
@@ -131,7 +150,11 @@ public class AuthController {
         Map<String, Object> data = new HashMap<>();
         data.put("token", token);
         data.put("phone", phone);
+        // userId/position/teamId 回给前端，用于按钮级的角色判断（如「分配」只对老板/主管可见）
+        data.put("userId", user.getId());
         data.put("role", user.getRole());
+        data.put("position", position);
+        data.put("teamId", teamId);
         data.put("tenantId", user.getTenantId());
         return Map.of("code", 0, "msg", "登录成功", "data", data);
     }

@@ -114,31 +114,31 @@ func JWTAuth(secret, header, prefix string) gin.HandlerFunc {
 		//   - 下游服务的代码更简单
 		//
 		// 【安全注意】注入的 X-User-* 头必须"覆盖"外部传入的值。
-		// 攻击者可能伪造请求头 X-User-Phone: admin 直接访问下游服务，
-		// 所以下游服务要么只信任来自网关的流量（内网隔离），
-		// 要么网关必须在转发前把外部传入的同名头删掉。
-		// 这里用 Set 是覆盖语义，但因为请求头 map 是多值的，
-		// 严格做法是先 Del 再 Add。学习阶段先用 Set 即可。
+		// 攻击者可能伪造请求头 X-User-Id: 1 直接访问下游服务，
+		// 所以必须先 Del 再 Set：请求头 map 是多值的，只 Set 可能留下伪造的那一条。
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			// phone 是签发时写入的字段
-			if phone, ok := claims["phone"].(string); ok {
-				c.Request.Header.Set("X-User-Phone", phone)
-			}
-			// uid 也是签发时写入的（如果 Java 端有写）
-			if uid, ok := claims["uid"].(string); ok {
-				c.Request.Header.Set("X-User-Id", uid)
-			}
+			setStringClaim(c, claims, "phone", "X-User-Phone")
+			setStringClaim(c, claims, "uid", "X-User-Id")
 			// role / tenantId：user-service 登录时写入，
 			// 下游服务据此判断身份角色和租户（多租户表级隔离）
-			if role, ok := claims["role"].(string); ok {
-				c.Request.Header.Set("X-User-Role", role)
-			}
-			if tenantId, ok := claims["tenantId"].(string); ok {
-				c.Request.Header.Set("X-Tenant-Id", tenantId)
-			}
+			setStringClaim(c, claims, "role", "X-User-Role")
+			setStringClaim(c, claims, "tenantId", "X-Tenant-Id")
+			// position / teamId：岗位与团队，crm-service 据此推导数据权限
+			// （BOSS→ALL / SALES_MANAGER→TEAM / SALES_REP→SELF）
+			setStringClaim(c, claims, "position", "X-Job-Code")
+			setStringClaim(c, claims, "teamId", "X-Team-Id")
 		}
 
 		// ---------- 第 5 步：放行 ----------
 		c.Next()
+	}
+}
+
+// setStringClaim 把 JWT 里的一个 claim 透传成请求头，写之前先删同名头防伪造。
+// claims 里的值必须是字符串：签发方（user-service）用 String.valueOf 保证。
+func setStringClaim(c *gin.Context, claims jwt.MapClaims, claimKey, headerKey string) {
+	c.Request.Header.Del(headerKey)
+	if v, ok := claims[claimKey].(string); ok && v != "" {
+		c.Request.Header.Set(headerKey, v)
 	}
 }

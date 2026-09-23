@@ -20,4 +20,5 @@ redis:
 services:
   user-service: "http://localhost:8081"
   index-service: "http://localhost:8082"
+  crm-service: "http://localhost:8083"
 

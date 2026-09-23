@@ -27,3 +27,11 @@ routes:
     target: user-service
     stripPrefix: false
     middlewares: [cors, requestid, auth]
+
+# 规则5，转发到线索模块（需登录）
+# 说明：/internal/** 不在本文件里，网关不暴露内部接口
+  - id: crm-secure
+    prefix: /api/v1/crm
+    target: crm-service
+    stripPrefix: false
+    middlewares: [cors, requestid, auth]

@@ -21,3 +21,4 @@ redis:
 services:
   user-service: "http://user-service:8081"
   index-service: "http://index-service:8082"
+  crm-service: "http://crm-service:8083"

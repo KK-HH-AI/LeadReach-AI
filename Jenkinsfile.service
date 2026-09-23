@@ -17,6 +17,8 @@ pipeline {
             steps {
                 dir('service') {
                     sh 'docker build -t leadreach/user-service:latest .'
+                    // crm-service 的构建上下文仍是 service/，Dockerfile 放在子模块目录
+                    sh 'docker build -t leadreach/crm-service:latest -f crm-service/Dockerfile .'
                 }
             }
         }
@@ -31,7 +33,7 @@ pipeline {
             steps {
                 sh '''
                     cd ${WORKSPACE}
-                    docker compose up -d --no-deps --no-build user-service
+                    docker compose up -d --no-deps --no-build user-service crm-service
                 '''
             }
         }
