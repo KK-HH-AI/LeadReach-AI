@@ -24,6 +24,18 @@ const FALLBACK_MENUS: MenuItem[] = [
   { id: 'dashboard', name: '工作台', path: '/dashboard', icon: 'Odometer', permission: 'dashboard' },
   { id: 'team', name: '团队管理', path: '/team', icon: 'User', permission: 'team' },
   {
+    id: 'crm',
+    name: '客户管理',
+    path: '/crm',
+    icon: 'Files',
+    permission: 'crm:*',
+    children: [
+      { id: 'crm-leads', name: '线索列表', path: '/crm/leads', permission: 'crm:*' },
+      { id: 'crm-pool', name: '公共线索池', path: '/crm/pool', permission: 'crm:*' },
+      { id: 'crm-dashboard', name: '线索看板', path: '/crm/dashboard', permission: 'crm:*' }
+    ]
+  },
+  {
     id: 'system',
     name: '系统管理',
     path: '/system',
@@ -79,15 +91,17 @@ export const useUserStore = defineStore('user', {
       const res = await authApi.login(payload)
       // setToken 第二参可选（后端无 refreshToken）
       this.setToken(res.token, res.refreshToken || '')
-      // 本地合成用户档案：phone 即登录凭证，role/tenantId 来自登录返回
+      // 本地合成用户档案：phone 即登录凭证，userId/role/position/tenantId 来自登录返回
       this.profile = {
-        id: res.phone || payload.phone,
+        id: String(res.userId ?? res.phone ?? payload.phone),
         username: res.phone || payload.phone,
         name: res.phone || payload.phone,
         email: '',
         mobile: res.phone || payload.phone,
         tenantId: res.tenantId ?? '',
         role: res.role ?? '',
+        position: res.position ?? '',
+        teamId: res.teamId,
         isAdmin: true,
         roles: [],
         permissions: []

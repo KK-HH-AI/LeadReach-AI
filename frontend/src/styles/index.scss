@@ -1,4 +1,10 @@
 // 全局样式基础
+html {
+  // 显式声明浅色方案：本系统只有浅色主题，如果不声明，
+  // 系统处于深色模式时浏览器会把没有背景色的区域（侧边栏/顶栏）自动反色成黑色
+  color-scheme: light;
+}
+
 html,
 body,
 #app {
@@ -8,6 +14,12 @@ body,
   font-family:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
     'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+// 兜底底色：避免元素靠画布色渲染，导致深色模式下局部发黑
+body {
+  background-color: var(--el-bg-color);
+  color: var(--el-text-color-primary);
 }
 
 * {

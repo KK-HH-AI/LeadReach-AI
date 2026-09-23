@@ -5,6 +5,9 @@ export interface TeamMember {
   employeeId: number
   phone: string
   position: string
+  /** 所属团队ID，空 = 未分团队 */
+  teamId?: number
+  teamName?: string
   createdAt: string
 }
 

@@ -53,9 +53,10 @@ service.interceptors.response.use(
     if (res.code === SUCCESS_CODE) {
       return res.data as unknown as AxiosResponse
     }
-    // 业务错误
-    ElMessage.error(res.message || res.traceId || '请求失败')
-    return Promise.reject(new Error(res.message))
+    // 业务错误：真实后端返回 msg，mock 返回 message，两者都兼容
+    const message = res.msg || res.message || res.traceId || '请求失败'
+    ElMessage.error(message)
+    return Promise.reject(new Error(message))
   },
   async (error) => {
     const { response, config } = error

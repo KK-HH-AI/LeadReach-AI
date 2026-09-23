@@ -81,13 +81,40 @@ export const staticRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/profile/index.vue'),
         meta: { title: '个人中心', hidden: true, permission: 'profile' }
       },
-      // 后续阶段占位：路由 + 菜单可见，页面走 ComingSoon
       {
         path: 'crm',
-        name: 'CrmPlaceholder',
-        component: () => import('@/views/coming-soon/index.vue'),
-        meta: { title: '客户管理', icon: 'Files' }
+        name: 'Crm',
+        component: () => import('@/layouts/components/AppMain.vue'),
+        meta: { title: '客户管理', icon: 'Files' },
+        redirect: '/crm/leads',
+        children: [
+          {
+            path: 'leads',
+            name: 'CrmLeads',
+            component: () => import('@/views/crm/leads/index.vue'),
+            meta: { title: '线索列表', permission: 'crm:*' }
+          },
+          {
+            path: 'leads/:id',
+            name: 'CrmLeadDetail',
+            component: () => import('@/views/crm/leads/detail.vue'),
+            meta: { title: '线索详情', hidden: true, permission: 'crm:*' }
+          },
+          {
+            path: 'pool',
+            name: 'CrmPool',
+            component: () => import('@/views/crm/pool/index.vue'),
+            meta: { title: '公共线索池', permission: 'crm:*' }
+          },
+          {
+            path: 'dashboard',
+            name: 'CrmDashboard',
+            component: () => import('@/views/crm/dashboard/index.vue'),
+            meta: { title: '线索看板', permission: 'crm:*' }
+          }
+        ]
       },
+      // 后续阶段占位：路由 + 菜单可见，页面走 ComingSoon
       {
         path: 'channel',
         name: 'ChannelPlaceholder',

@@ -6,7 +6,6 @@
       :collapse="isCollapsed"
       :collapse-transition="false"
       router
-      background-color="transparent"
       unique-opened
     >
       <template v-for="item in menuTree" :key="item.path">
@@ -71,13 +70,39 @@ const titleResolver: Record<string, string> = {
 <style scoped lang="scss">
 .sidebar {
   height: 100%;
+  background-color: var(--el-bg-color);
 
   &__menu {
     border-right: none;
-  }
+    // 显式声明浅色配色，不依赖画布色，避免深色模式下菜单发黑
+    --el-menu-bg-color: var(--el-bg-color);
+    --el-menu-text-color: var(--el-text-color-regular);
+    --el-menu-hover-bg-color: var(--el-fill-color-light);
+    --el-menu-active-color: var(--el-color-primary);
+    --el-menu-item-height: 44px;
+    --el-menu-sub-item-height: 40px;
 
-  :deep(.el-menu-item.is-active) {
-    background-color: var(--el-color-primary-light-9);
+    // 菜单项做成圆角块，视觉上更轻
+    :deep(.el-menu-item),
+    :deep(.el-sub-menu__title) {
+      margin: 4px 8px;
+      border-radius: 6px;
+    }
+
+    // 选中态：主色浅底 + 加粗，优先级高于 hover
+    :deep(.el-menu-item.is-active) {
+      background-color: var(--el-color-primary-light-9);
+      color: var(--el-color-primary);
+      font-weight: 600;
+    }
+
+    // 折叠时去掉左右外边距，避免图标被挤偏
+    &.el-menu--collapse {
+      :deep(.el-menu-item),
+      :deep(.el-sub-menu__title) {
+        margin: 4px;
+      }
+    }
   }
 }
 </style>

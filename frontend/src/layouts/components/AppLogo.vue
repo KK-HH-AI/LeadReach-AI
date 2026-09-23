@@ -21,6 +21,7 @@ const title = '获客运营平台'
   justify-content: center;
   gap: 8px;
   border-bottom: 1px solid var(--el-border-color-light);
+  background-color: var(--el-bg-color);
 
   &__text {
     font-weight: 700;

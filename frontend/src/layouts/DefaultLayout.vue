@@ -37,10 +37,13 @@ const isCollapsed = computed(() => appStore.isCollapsed)
     transition: width 0.2s;
     display: flex;
     flex-direction: column;
+    // 显式背景色：不依赖画布色，否则深色模式下侧边栏会变黑
+    background-color: var(--el-bg-color);
   }
 
   &__header {
     padding: 0;
+    background-color: var(--el-bg-color);
   }
 
   &__main {
