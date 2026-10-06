@@ -1,27 +1,3 @@
-// 服务器包：把"服务发现、中间件、路由、代理"这些零件组装成一台能跑的网关
-//
-// 【心智模型：组装车间】
-// 函数 New(cfg, logger):
-//	准备"服务发现"零件：把 cfg.Services 这张 服务名→地址 表交给 StaticResolver；
-//	准备"中间件注册表"零件：新建 Registry，并向它登记 3 张"菜谱"：
-//		登记 "cors"      → CORS 工厂（不需要参数，直接给工厂本身）
-//		登记 "requestid" → RequestID 工厂（同上）
-//		登记 "auth"      → 闭包工厂（需要绑定 JWT 密钥，用闭包包一层）
-//	创建 gin 引擎；
-//	遍历 cfg.Routes 里每一条转发规则：
-//		按规则里写的中间件名字，让 Registry 现场"点菜"，拼出中间件链；
-//		为该规则创建反向代理（服务发现 + 目标服务名 + 是否剥前缀）；
-//		把 [中间件链 + 代理] 挂到规则的前缀路径上；
-//	返回组装好的 Server。
-//
-// 函数 Start(ctx):
-//	创建 http.Server（监听端口，处理器就是 gin 引擎）；
-//	开一个 goroutine 去监听端口，报错就塞进错误通道；
-//	阻塞等待，二选一：
-//		情况一：收到 ctx 取消（用户按了 Ctrl+C / 系统发来退出信号）→ 触发优雅停机；
-//		情况二：监听端口出错 → 直接返回错误；
-//	优雅停机：给正在处理的请求 5 秒善后时间，然后关服务器。
-
 package server
 
 import (
@@ -43,7 +19,7 @@ import (
 type Server struct {
 	cfg    *config.Config
 	logger *slog.Logger
-	engine *gin.Engine
+	engine *gin.Engine // gin引擎，真正干活的HTTP处理器
 }
 
 // New 组装所有零件，返回一台"待启动"的网关

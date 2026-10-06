@@ -1,13 +1,3 @@
-// 配置包：把 configs/ 下的 yaml 文件读进 Go 结构体
-//
-// 【心智模型】
-// 函数 Load():
-//	创建"主配置阅读器"，读 config.yaml；
-//	把 yaml 内容整个倒进 Config 结构体；
-//	创建"路由配置阅读器"，读 routes.yaml；
-//	把 routes 字段单独倒进 cfg.Routes；
-//	返回组装好的 Config。
-
 package config
 
 import (
@@ -56,12 +46,6 @@ type Config struct {
 	Routes []RouteConfig
 }
 
-// Load 读取 configs/ 下的配置文件，组装成 Config 返回
-//
-// 【多环境解耦】
-// 通过环境变量 APP_ENV 选择配置文件，不写死一份：
-//   - APP_ENV=production → configs/config.prod.yaml（服务器/容器用，服务名解析）
-//   - 其他值或不设置   → configs/config.yaml（本地开发用，localhost 直连）
 func Load() (*Config, error) {
 	cfg := &Config{}
 

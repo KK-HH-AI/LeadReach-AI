@@ -2,6 +2,7 @@ module github.com/KK-HH-AI/LeadReach-AI/gateway-service
 
 go 1.25.0
 
+// 直接依赖
 require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
@@ -10,6 +11,7 @@ require (
 	github.com/spf13/viper v1.18.2
 )
 
+// 间接依赖
 require (
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect

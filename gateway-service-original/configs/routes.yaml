@@ -1,11 +1,11 @@
 # 转发规则(颗粒度是业务，非服务)
 routes:
 # 规则1，转发到登录相关接口
-  - id: auth-public
-    prefix: /api/v1/auth
-    target: user-service
-    stripPrefix: false
-    middlewares: [cors, requestid]
+  - id: auth-public                # 路由规则名
+    prefix: /api/v1/auth           # 网关收到的路由前缀
+    target: user-service           # 转发到哪个服务
+    stripPrefix: false             # 是否去掉前缀再转发
+    middlewares: [cors, requestid] # 这条路由挂哪些中间件
 
 # 规则2，转发到用户相关接口
   - id: users-secure
