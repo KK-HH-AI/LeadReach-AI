@@ -40,11 +40,15 @@ export default {
     currentUser: 'Current User',
     role: 'Role',
     loginTime: 'Login Time',
-    leads: 'Leads',
-    customers: 'Customers',
-    todaySent: 'Emails Sent Today',
-    followUp: 'To Follow Up',
-    placeholderNote: 'Stat cards will be filled in later phases'
+    bossTeamTitle: 'Team Overview',
+    bossTeamEmpty: 'No members yet. Invite them in Team Management',
+    bossTeamError: 'Failed to load team info. Make sure your company is created and retry',
+    goToTeam: 'Go to Team Management',
+    employeeTitle: 'My Workspace',
+    myPosition: 'My Position',
+    myTeam: 'My Team',
+    noTeamHint: 'Not joined a company yet. Ask your boss to invite you',
+    goToProfile: 'Go to Profile'
   },
   menu: {
     dashboard: 'Dashboard',

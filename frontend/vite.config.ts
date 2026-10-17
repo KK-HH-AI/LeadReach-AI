@@ -38,7 +38,8 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
       port: 5173,
       proxy: {
-        // 骨架阶段反向代理到 Go 网关；mock 模式下可由 request 层本地拦截
+        // 开发环境经本地 Go 网关转发到后端服务（.env.development 的 VITE_API_PROXY_TARGET）；
+        // 网关负责校验 JWT 并注入 X-User-* 身份头
         '/api': {
           target: env.VITE_API_PROXY_TARGET || 'http://localhost:8080',
           changeOrigin: true

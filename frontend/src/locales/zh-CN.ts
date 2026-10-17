@@ -40,11 +40,15 @@ export default {
     currentUser: '当前用户',
     role: '角色',
     loginTime: '登录时间',
-    leads: '线索数',
-    customers: '客户数',
-    todaySent: '今日发信',
-    followUp: '待跟进',
-    placeholderNote: '统计卡片将在后续阶段填充'
+    bossTeamTitle: '团队概况',
+    bossTeamEmpty: '暂无成员，可前往团队管理拉人入队',
+    bossTeamError: '团队信息加载失败，请确认已创建公司后重试',
+    goToTeam: '前往团队管理',
+    employeeTitle: '我的工作台',
+    myPosition: '我的岗位',
+    myTeam: '我的团队',
+    noTeamHint: '尚未加入公司，请联系老板将你拉入团队',
+    goToProfile: '前往个人中心'
   },
   menu: {
     dashboard: '工作台',
