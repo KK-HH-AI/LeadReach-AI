@@ -18,6 +18,10 @@ public class Company {
     private Long id;
     /** 公司名称 */
     private String name;
+    /** 行业，选填 */
+    private String industry;
+    /** 地区，选填 */
+    private String region;
     /** 老板用户ID(user.id) */
     private Long bossId;
     private LocalDateTime createdAt;

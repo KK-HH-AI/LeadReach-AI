@@ -3,7 +3,7 @@ package com.leadreach.user.dto;
 import lombok.Data;
 
 /**
- * 内部接口返回的用户信息（供 crm-service 等跨服务调用）
+ * 内部接口返回的用户信息（供跨服务调用）
  * 注意：user 表当前没有姓名字段，name 暂以手机号回填，前端展示口径不变
  */
 @Data

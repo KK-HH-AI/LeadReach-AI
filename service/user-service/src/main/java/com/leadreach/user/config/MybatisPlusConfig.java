@@ -35,13 +35,15 @@ public class MybatisPlusConfig {
              * 忽略租户过滤的表：
              *  - user：跨租户共享（注册/登录/拉人按手机号查人，此时还没有租户上下文）
              *  - company：租户根表，公司ID即租户ID，不能自己过滤自己
+             *  - join_request：天然跨租户（写入方是尚无租户的员工，读取方是有租户的老板），
+             *    条件由 Service 显式控制
              * 注意：实体 @TableName("`user`") 带反引号，插件传入的表名可能带反引号，
              *      必须先去掉再比较，否则匹配不上会把 user 表也强制加租户条件
              */
             @Override
             public boolean ignoreTable(String tableName) {
                 String t = tableName.toLowerCase().replace("`", "");
-                return "user".equals(t) || "company".equals(t);
+                return "user".equals(t) || "company".equals(t) || "join_request".equals(t);
             }
         }));
         return interceptor;

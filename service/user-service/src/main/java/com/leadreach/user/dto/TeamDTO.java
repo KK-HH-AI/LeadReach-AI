@@ -3,7 +3,7 @@ package com.leadreach.user.dto;
 import lombok.Data;
 
 /**
- * 内部接口返回的团队信息（供 crm-service 等跨服务调用）
+ * 内部接口返回的团队信息（供跨服务调用）
  */
 @Data
 public class TeamDTO {

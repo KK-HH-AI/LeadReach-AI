@@ -19,6 +19,10 @@ public class User {
     private Long id;
     /** 手机号（登录账号），唯一 */
     private String phone;
+    /** 姓名，选填（拉人检索用） */
+    private String name;
+    /** 邮箱，选填（拉人检索用） */
+    private String email;
     /** 登录密码（BCrypt 哈希），注册时设置 */
     private String password;
     /** 身份角色：BOSS / EMPLOYEE */

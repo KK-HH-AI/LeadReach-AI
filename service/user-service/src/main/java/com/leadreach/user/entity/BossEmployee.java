@@ -26,6 +26,8 @@ public class BossEmployee {
     private String position;
     /** 所属团队 team.id，NULL=尚未分配到具体团队 */
     private Long teamId;
+    /** 团队自定义岗位 team_position.id，NULL=未分类 */
+    private Long teamPositionId;
     /** 状态：1在职 0已移除 */
     private Integer status;
     private LocalDateTime createdAt;

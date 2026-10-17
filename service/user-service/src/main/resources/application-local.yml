@@ -1,16 +1,16 @@
-# 本地开发环境（默认）：连本地/局域网的服务
+# 本地开发环境（默认）：连本机服务；Nacos 关闭（网关静态寻址，本地无需注册中心）
 spring:
   cloud:
     nacos:
       discovery:
-        server-addr: 172.21.160.247:8848
+        enabled: false
   data:
     redis:
-      host: 172.21.160.247
+      host: 127.0.0.1
       port: 6379
       password: 12345678
   datasource:
-    url: jdbc:mysql://172.21.160.247:3306/leadreach?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://127.0.0.1:3306/leadreach?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
     password: "123456"
     driver-class-name: com.mysql.cj.jdbc.Driver
