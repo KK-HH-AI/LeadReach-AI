@@ -20,5 +20,3 @@ redis:
 # 服务发现表：容器编排下通过 Docker 网络用服务名解析
 services:
   user-service: "http://user-service:8081"
-  index-service: "http://index-service:8082"
-  crm-service: "http://crm-service:8083"

@@ -1,4 +1,4 @@
-// 后端流水线：只负责 service/ 目录（含 user-service/leadreach-common），构建 Java 镜像并部署
+// 后端流水线：只负责 service/ 目录（含 user-service），构建 Java 镜像并部署
 // 触发：每天 12 点那一小时内轮询 GitHub；H 让 Jenkins 自动错开各 Job 的分钟，避免整点挤一起
 // 变更过滤：首构(BUILD_NUMBER==1)或改动 service/ 时才执行
 pipeline {
@@ -17,8 +17,6 @@ pipeline {
             steps {
                 dir('service') {
                     sh 'docker build -t leadreach/user-service:latest .'
-                    // crm-service 的构建上下文仍是 service/，Dockerfile 放在子模块目录
-                    sh 'docker build -t leadreach/crm-service:latest -f crm-service/Dockerfile .'
                 }
             }
         }
@@ -33,7 +31,7 @@ pipeline {
             steps {
                 sh '''
                     cd ${WORKSPACE}
-                    docker compose up -d --no-deps --no-build user-service crm-service
+                    docker compose up -d --no-deps --no-build user-service
                 '''
             }
         }

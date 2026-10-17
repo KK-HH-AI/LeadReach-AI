@@ -23,8 +23,6 @@
 	<!-- 子模块列表 -->
 	<modules>
 		<module>user-service</module>
-		<module>crm-service</module>
-		<module>leadreach-common</module>
 		<!-- 后续新增模块在这里追加，如：
         <module>index-service</module>
         <module>campaign-service</module>

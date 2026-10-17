@@ -4,7 +4,7 @@
  */
 export interface ApiResponse<T = unknown> {
   code: number
-  /** 后端（user-service / crm-service）统一用 msg */
+  /** 后端（user-service）统一用 msg */
   msg?: string
   /** mock 层沿用 message */
   message?: string

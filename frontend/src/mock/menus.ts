@@ -54,24 +54,11 @@ export function buildMenus(): MenuItem[] {
       ]
     },
     {
-      id: 'm-crm',
-      name: '客户管理',
-      path: '/crm',
-      icon: 'Files',
-      order: 3,
-      permission: 'crm:*',
-      children: [
-        { id: 'm-crm-leads', name: '线索列表', path: '/crm/leads', order: 1, permission: 'crm:*' },
-        { id: 'm-crm-pool', name: '公共线索池', path: '/crm/pool', order: 2, permission: 'crm:*' },
-        { id: 'm-crm-dash', name: '线索看板', path: '/crm/dashboard', order: 3, permission: 'crm:*' }
-      ]
-    },
-    {
       id: 'm-channel',
       name: '获客渠道',
       path: '/channel',
       icon: 'Search',
-      order: 4,
+      order: 3,
       permission: 'channel:*'
     },
     {
@@ -79,7 +66,7 @@ export function buildMenus(): MenuItem[] {
       name: '邮件中心',
       path: '/email',
       icon: 'Message',
-      order: 5,
+      order: 4,
       permission: 'email:*'
     },
     {
@@ -87,7 +74,7 @@ export function buildMenus(): MenuItem[] {
       name: '自动开发',
       path: '/acquisition',
       icon: 'MagicStick',
-      order: 6,
+      order: 5,
       permission: 'acquisition:*'
     },
     {
@@ -95,7 +82,7 @@ export function buildMenus(): MenuItem[] {
       name: '运营系统',
       path: '/operation',
       icon: 'Guide',
-      order: 7,
+      order: 6,
       permission: 'operation:*'
     },
     {
@@ -103,7 +90,7 @@ export function buildMenus(): MenuItem[] {
       name: 'AI Agent',
       path: '/agent',
       icon: 'Cpu',
-      order: 8,
+      order: 7,
       permission: 'agent:*'
     }
   ]

@@ -24,18 +24,6 @@ const FALLBACK_MENUS: MenuItem[] = [
   { id: 'dashboard', name: '工作台', path: '/dashboard', icon: 'Odometer', permission: 'dashboard' },
   { id: 'team', name: '团队管理', path: '/team', icon: 'User', permission: 'team' },
   {
-    id: 'crm',
-    name: '客户管理',
-    path: '/crm',
-    icon: 'Files',
-    permission: 'crm:*',
-    children: [
-      { id: 'crm-leads', name: '线索列表', path: '/crm/leads', permission: 'crm:*' },
-      { id: 'crm-pool', name: '公共线索池', path: '/crm/pool', permission: 'crm:*' },
-      { id: 'crm-dashboard', name: '线索看板', path: '/crm/dashboard', permission: 'crm:*' }
-    ]
-  },
-  {
     id: 'system',
     name: '系统管理',
     path: '/system',

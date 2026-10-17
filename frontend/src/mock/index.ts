@@ -99,7 +99,6 @@ function permissionsFor(user?: (typeof users)[number]): string[] {
       'system:role:*',
       'system:perm:*',
       'profile',
-      'crm:*',
       'channel:*',
       'email:*',
       'acquisition:*',

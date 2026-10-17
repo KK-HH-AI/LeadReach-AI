@@ -16,9 +16,7 @@ redis:
   password: "12345678"
   db: 0
 
-# 方便本地服务开发
+# 本地服务开发
 services:
   user-service: "http://localhost:8081"
-  index-service: "http://localhost:8082"
-  crm-service: "http://localhost:8083"
 

@@ -123,7 +123,7 @@ func JWTAuth(secret, header, prefix string) gin.HandlerFunc {
 			// 下游服务据此判断身份角色和租户（多租户表级隔离）
 			setStringClaim(c, claims, "role", "X-User-Role")
 			setStringClaim(c, claims, "tenantId", "X-Tenant-Id")
-			// position / teamId：岗位与团队，crm-service 据此推导数据权限
+			// position / teamId：岗位与团队，下游业务服务据此推导数据权限
 			// （BOSS→ALL / SALES_MANAGER→TEAM / SALES_REP→SELF）
 			setStringClaim(c, claims, "position", "X-Job-Code")
 			setStringClaim(c, claims, "teamId", "X-Team-Id")
